@@ -179,8 +179,7 @@ async def translate_text(text: str) -> str:
     try:
         # 计算输入文本的token数量
         input_tokens = count_tokens(text)
-        # 设置输出token限制为输入的2倍（因为翻译可能会导致文本膨胀）
-        max_output_tokens = input_tokens * 2
+        max_output_tokens = 32768
         
         response = await client.chat.completions.create(
             model=API_MODEL,
