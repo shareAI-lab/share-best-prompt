@@ -12,6 +12,7 @@ import tiktoken
 
 PROMPT_PATH = "./share-best-prompt"
 
+# API配置
 API_BASE_URL = "https://api.openai.com/v1"
 API_KEY = "sk-xxx"
 API_MODEL = "gpt-4o"
@@ -81,97 +82,162 @@ def find_special_blocks(text: str) -> List[Tuple[int, int, str]]:
     # 按开始位置排序
     return sorted(blocks, key=lambda x: x[0])
 
-def split_text_into_chunks(text: str, max_tokens: int = 20000) -> List[str]:
+def split_text_into_chunks(text: str, max_tokens: int = 8000) -> List[str]:
     """将文本按token数量分割成块，保持特殊块的完整性"""
-    # 找出所有特殊块的位置
+    chunks = []
     special_blocks = find_special_blocks(text)
     
-    chunks = []
-    current_chunk = ""
-    current_chunk_tokens = 0
-    last_pos = 0
-    
     def add_chunk(chunk: str):
+        """添加非空文本块到结果列表"""
         if chunk.strip():
+            # 验证添加的块的token数量
+            chunk_tokens = count_tokens(chunk)
+            print(f"添加块: {chunk_tokens} tokens")
             chunks.append(chunk)
     
-    for start, end, block_type in special_blocks:
-        # 处理特殊块之前的普通文本
-        if last_pos < start:
-            normal_text = text[last_pos:start]
-            sentences = re.split(r'([。！？.!?])', normal_text)
+    # 如果没有特殊块，直接处理整个文本
+    if not special_blocks:
+        current_chunk = ""
+        current_tokens = 0
+        sentences = re.split(r'([。！？.!?\n])', text)
+        
+        i = 0
+        while i < len(sentences):
+            sentence = sentences[i]
+            if i + 1 < len(sentences):
+                sentence += sentences[i + 1]
             
-            for i in range(0, len(sentences)-1, 2):
-                sentence = sentences[i] + (sentences[i+1] if i+1 < len(sentences) else '')
-                sentence_tokens = count_tokens(sentence)
-                
-                # 如果当前块加上新句子会超过token限制
-                if current_chunk_tokens + sentence_tokens > max_tokens and current_chunk:
-                    add_chunk(current_chunk)
-                    current_chunk = sentence
-                    current_chunk_tokens = sentence_tokens
-                else:
-                    current_chunk += sentence
-                    current_chunk_tokens += sentence_tokens
-        
-        # 处理特殊块
-        special_block = text[start:end]
-        special_block_tokens = count_tokens(special_block)
-        
-        # 如果特殊块本身就超过最大token限制，单独作为一个块
-        if special_block_tokens > max_tokens:
-            if current_chunk:
-                add_chunk(current_chunk)
-                current_chunk = ""
-                current_chunk_tokens = 0
-            add_chunk(special_block)
-        # 如果当前块加上特殊块会超过token限制
-        elif current_chunk_tokens + special_block_tokens > max_tokens and current_chunk:
-            add_chunk(current_chunk)
-            current_chunk = special_block
-            current_chunk_tokens = special_block_tokens
-        else:
-            current_chunk += special_block
-            current_chunk_tokens += special_block_tokens
-        
-        last_pos = end
-    
-    # 处理最后一段普通文本
-    if last_pos < len(text):
-        remaining_text = text[last_pos:]
-        sentences = re.split(r'([。！？.!?])', remaining_text)
-        
-        for i in range(0, len(sentences)-1, 2):
-            sentence = sentences[i] + (sentences[i+1] if i+1 < len(sentences) else '')
             sentence_tokens = count_tokens(sentence)
             
-            if current_chunk_tokens + sentence_tokens > max_tokens and current_chunk:
+            if current_tokens + sentence_tokens > max_tokens:
                 add_chunk(current_chunk)
                 current_chunk = sentence
-                current_chunk_tokens = sentence_tokens
+                current_tokens = sentence_tokens
             else:
                 current_chunk += sentence
-                current_chunk_tokens += sentence_tokens
+                current_tokens += sentence_tokens
+            
+            i += 2
+        
+        if current_chunk:
+            add_chunk(current_chunk)
+    else:
+        # 处理带有特殊块的文本
+        current_chunk = ""
+        current_tokens = 0
+        last_pos = 0
+        
+        for start, end, block_type in special_blocks:
+            # 处理特殊块之前的文本
+            if last_pos < start:
+                normal_text = text[last_pos:start]
+                sentences = re.split(r'([。！？.!?\n])', normal_text)
+                
+                i = 0
+                while i < len(sentences):
+                    sentence = sentences[i]
+                    if i + 1 < len(sentences):
+                        sentence += sentences[i + 1]
+                    
+                    sentence_tokens = count_tokens(sentence)
+                    
+                    if current_tokens + sentence_tokens > max_tokens:
+                        add_chunk(current_chunk)
+                        current_chunk = sentence
+                        current_tokens = sentence_tokens
+                    else:
+                        current_chunk += sentence
+                        current_tokens += sentence_tokens
+                    
+                    i += 2
+            
+            # 处理特殊块
+            special_block = text[start:end]
+            special_block_tokens = count_tokens(special_block)
+            
+            # 如果特殊块本身就超过限制
+            if special_block_tokens > max_tokens:
+                if current_chunk:
+                    add_chunk(current_chunk)
+                add_chunk(special_block)
+                current_chunk = ""
+                current_tokens = 0
+            # 如果当前块加上特殊块会超过限制
+            elif current_tokens + special_block_tokens > max_tokens:
+                add_chunk(current_chunk)
+                current_chunk = special_block
+                current_tokens = special_block_tokens
+            else:
+                current_chunk += special_block
+                current_tokens += special_block_tokens
+            
+            last_pos = end
+        
+        # 处理最后一段文本
+        if last_pos < len(text):
+            remaining_text = text[last_pos:]
+            sentences = re.split(r'([。！？.!?\n])', remaining_text)
+            
+            i = 0
+            while i < len(sentences):
+                sentence = sentences[i]
+                if i + 1 < len(sentences):
+                    sentence += sentences[i + 1]
+                
+                sentence_tokens = count_tokens(sentence)
+                
+                if current_tokens + sentence_tokens > max_tokens:
+                    add_chunk(current_chunk)
+                    current_chunk = sentence
+                    current_tokens = sentence_tokens
+                else:
+                    current_chunk += sentence
+                    current_tokens += sentence_tokens
+                
+                i += 2
+        
+        if current_chunk:
+            add_chunk(current_chunk)
     
-    # 添加最后一个块
-    if current_chunk:
-        add_chunk(current_chunk)
+    # 验证总token数
+    original_tokens = count_tokens(text)
+    chunks_tokens = sum(count_tokens(chunk) for chunk in chunks)
+    print(f"原文tokens: {original_tokens}")
+    print(f"分块后tokens: {chunks_tokens}")
     
     return chunks
 
-async def translate_chunks(chunks: List[str]) -> str:
+async def translate_chunks(chunks: List[str], original_text: str) -> str:
     """翻译所有文本块并合并结果"""
     translated_chunks = []
+    total_tokens = sum(count_tokens(chunk) for chunk in chunks)
+    processed_tokens = 0
+    
     for i, chunk in enumerate(chunks):
         chunk_tokens = count_tokens(chunk)
-        print(f"正在翻译第 {i+1}/{len(chunks)} 个文本块 (tokens: {chunk_tokens})")
+        processed_tokens += chunk_tokens
+        print(f"正在翻译第 {i+1}/{len(chunks)} 个文本块 "
+              f"(tokens: {chunk_tokens}, 进度: {processed_tokens}/{total_tokens})")
+        
         translated_chunk = await translate_text(chunk)
         if translated_chunk:
             translated_chunks.append(translated_chunk)
         else:
             print(f"警告：第 {i+1} 个文本块翻译失败")
+            with open(f"failed_chunk_{i+1}.txt", "w", encoding="utf-8") as f:
+                f.write(chunk)
     
-    return "\n".join(translated_chunks)
+    result = "\n".join(translated_chunks)
+    
+    # 验证翻译结果是否包含所有特殊块
+    original_special_blocks = find_special_blocks(original_text)
+    for _, _, block_type in original_special_blocks:
+        if block_type == 'code' and '```' not in result:
+            print("警告：翻译结果中缺少代码块！")
+        elif block_type == 'xml' and '<' not in result:
+            print("警告：翻译结果中缺少XML标签！")
+    
+    return result
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def translate_text(text: str) -> str:
@@ -179,7 +245,9 @@ async def translate_text(text: str) -> str:
     try:
         # 计算输入文本的token数量
         input_tokens = count_tokens(text)
-        max_output_tokens = 32768
+        # 设置输出token限制为输入的2倍（因为翻译可能会导致文本膨胀）
+        # 但最大不超过16k（8k输入的2倍）
+        max_output_tokens = min(input_tokens * 2, 16000)
         
         response = await client.chat.completions.create(
             model=API_MODEL,
@@ -200,13 +268,13 @@ async def process_file(file_path: str) -> None:
         # 异步读取原文件
         async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
             content = await f.read()
-        
-        # 将文本分割成多个块
+
+        # 将文本分割成块
         chunks = split_text_into_chunks(content)
         print(f"文件 {file_path} 被分割成 {len(chunks)} 个块")
         
         # 翻译所有块
-        translated_content = await translate_chunks(chunks)
+        translated_content = await translate_chunks(chunks, content)
         
         if translated_content:
             # 创建新的文件名
@@ -221,7 +289,7 @@ async def process_file(file_path: str) -> None:
             print(f"翻译失败: {file_path}")
     
     except Exception as e:
-        print(f"处理文件 {file_path} 时出错: {e}")
+        print(f"处理文件 {file_path} 时出错: {str(e)}")
 
 async def process_files(files: List[str], semaphore: asyncio.Semaphore) -> None:
     """使用信号量控制并发处理文件"""
@@ -237,8 +305,8 @@ async def main():
     txt_files = glob.glob(os.path.join(PROMPT_PATH, FILE_PATTERN), recursive=True)
     print(f"找到 {len(txt_files)} 个.txt文件需要翻译")
     
-    # 创建信号量限制并发数
-    semaphore = asyncio.Semaphore(10)
+    # 创建信号量限制并发数，考虑到每个文件可能被分成多个块，适当减小并发数
+    semaphore = asyncio.Semaphore(5)  # 从10改为5，避免并发请求过多
     
     # 异步处理所有文件
     await process_files(txt_files, semaphore)
