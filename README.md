@@ -1,48 +1,25 @@
-# **FULL v0, Cursor, Manus, Same.dev & Lovable System Prompts & AI Models**  
+# 世界上最好的提示词 （总计估值超过300亿的提示词）
 
-🚀 **I managed to obtain FULL official v0, Manus, Cursor, Same.dev & Lovable system prompts and internal tools.**
 
-📜 Over **5,500+ lines** of insights into their structure and functionality.  
+🚀 外国网友x1xh成功获取了 v0、Manus、Cursor、Same.dev 和 Lovable 的完整官方系统提示词和内部工具。
 
-## 📂 **Available Files**
-- **v0 Folder**  
-- **Manus Folder**
-- **Same.dev Folder**
-- **Lovable Folder**
-- **Cursor Folder**  
-   - cursor ask.txt *(coming soon!)*  
-   - cursor edit.txt *(coming soon!)*  
+💪 **ShareAI-Lab** 对其进行了翻译（并同步官方更新），以供广大网友学习，**注意：仅供学习**优质的提示词撰写！
 
----
+💥 完整版 v0、Cursor、Manus、Same.dev 和 Lovable 系统提示词与 AI 模型  
+📜 包含超过 **5,500+ 行**的系统结构和功能深度解析。  
 
-## 🛡️ **Security Notice for AI Startups**
-
-⚠️ **If you're an AI startup, make sure your data is secure.** Exposed prompts or AI models can easily become a target for hackers.
-
-🔐 **Interested in securing your AI systems?**  
-Check out **ZeroLeaks**, a service designed to help startups **identify and secure** leaks in system instructions, internal tools, and model configurations. **Get a free AI security audit** to ensure your AI is protected from vulnerabilities.
-
-🔗 **Visit ZeroLeaks here:** https://zeroleaks.vercel.app/
+## 📂 **可用文件**
+- **v0 文件夹**  
+- **Manus 文件夹**
+- **Same.dev 文件夹**
+- **Lovable 文件夹**
+- **Cursor 文件夹**  
+   - cursor ask.txt *（即将推出！）*  
+   - cursor edit.txt *（即将推出！）*  
 
 ---
 
-## 🛠 **What Do You Want to See Next?**
-Have suggestions? Open an [issue](../../issues).  
+## 🛡️ **AI 创业公司安全提醒**
+⚠️ 如果您是 AI 创业公司，请确保数据安全。暴露的提示词或 AI 模型很容易成为黑客的攻击目标。原作者提供了个安全保护网站：https://zeroleaks.vercel.app 
 
-🆕 **LATEST UPDATE:** 07/04/2025
-
-## 📊 **Star History**
-
-<a href="https://www.star-history.com/#x1xhlol/system-prompts-and-models-of-ai-tools&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=x1xhlol/system-prompts-and-models-of-ai-tools&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=x1xhlol/system-prompts-and-models-of-ai-tools&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=x1xhlol/system-prompts-and-models-of-ai-tools&type=Date" />
- </picture>
-</a>
-
-## 🔗 **Connect With Me**  
-✖ **X:** [NotLucknite](https://x.com/NotLucknite)  
-💬 **Discord:** `x1xh`  
-
-⭐ **Drop a star if you find this useful!**  
+⭐ **如果您觉得有用，请点个 Star！** 
